@@ -1,0 +1,76 @@
+name: Auto Update Katalog Anime
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch AniList Data
+        run: |
+          node -e '
+          const fs = require("fs");
+          const query = `
+          query {
+            Page(page: 1, perPage: 60) {
+              media(type: ANIME, sort: TRENDING_DESC, isAdult: false) {
+                id
+                title { romaji english }
+                coverImage { medium }
+                genres
+                episodes
+                status
+                averageScore
+                description(asHtml: false)
+                siteUrl
+                externalLinks { site url type }
+              }
+            }
+          }`;
+
+          fetch("https://graphql.anilist.co", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ query })
+          })
+          .then(res => res.json())
+          .then(json => {
+            const items = json.data.Page.media.map(m => ({
+              id: m.id,
+              title: m.title.english || m.title.romaji,
+              cover: m.coverImage.medium,
+              genres: m.genres,
+              episodes: m.episodes,
+              status: m.status,
+              score: m.averageScore,
+              description: (m.description || "").replace(/<[^>]*>?/gm, "").slice(0, 300) + "...",
+              anilistUrl: m.siteUrl,
+              watchLinks: (m.externalLinks || [])
+                .filter(l => l.type === "STREAMING")
+                .map(l => ({ site: l.site, url: l.url }))
+            }));
+
+            const output = {
+              updatedAt: new Date().toISOString().split("T")[0],
+              items
+            };
+            fs.mkdirSync("data", { recursive: true });
+            fs.writeFileSync("data/anime.json", JSON.stringify(output, null, 2));
+          });
+          '
+
+      - name: Commit and push updated catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/anime.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update katalog anime" && git push)
