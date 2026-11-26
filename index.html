@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anime Shelf Lite</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <h1>Anime Shelf Lite</h1>
+      <p class="subtitle">Katalog Anime Ringan &bull; <span id="last-updated">Memuat...</span></p>
+      
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="all">Semua Katalog</button>
+        <button class="tab-btn" data-tab="favorites">Favorit (<span id="fav-count">0</span>)</button>
+        <button class="tab-btn" data-tab="history">Riwayat</button>
+      </nav>
+
+      <div class="controls">
+        <input type="text" id="search-input" placeholder="Cari judul anime..." autocomplete="off">
+        <select id="genre-select">
+          <option value="">Semua Genre</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="status-msg" class="status-msg"></div>
+    <div id="anime-grid" class="anime-grid"></div>
+    <div id="pagination" class="pagination"></div>
+  </main>
+
+  <!-- Modal Detail & Tautan Tontonan -->
+  <div id="detail-modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="close-modal" class="close-btn">&times; Tutup</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
